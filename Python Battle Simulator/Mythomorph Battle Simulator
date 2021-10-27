@@ -1,0 +1,280 @@
+import random
+"Mythomorph Battle Simulator"
+
+class Mythomorph:
+    def __init__(self, name, level, damage, maxHP,speed):
+        self.name=name
+        self.level=level
+        self.damage=damage
+        self.maxHP=maxHP
+        self.currentHP= maxHP
+        self.speed=speed
+
+    def takeDamage(self,enemyDamage):
+        self.currentHP=self.currentHP-enemyDamage
+        if self.currentHP<0:
+            self.currentHP=0
+
+    def move(self):
+        n=False
+        query=input("Would you like to move {self.name}? yes or no?\n".format(self=self))
+        if query == "yes":
+            n=True
+        return n
+
+    def position(self,p):
+        n=p
+        query = input("What position would you like to move {self.name} to? center, right, or left?\n".format(self=self))
+        while n==p:
+            if query=="center":
+                n=1
+            elif query=="right":
+                n=2
+            else:
+                n=0
+            if n==p:
+                query=input("{self.name} is already at that position. Please pick another one. center, right, or left.\n ".format(self=self))
+        return n
+
+    def enemyPosition(self,p):
+        n=p
+        while n==p:
+            n=random.randint(0,2)
+        return n
+
+    def target(self,enemyTeam):
+        n=0
+        print(enemyTeam)
+        t=input("What position would you like to target: center, right, left\n")
+        if t=="center":
+            n=1
+        elif t=="right":
+            n=2
+        else:
+            n=0
+        return n
+
+    def enemyTarget(self):
+        n=random.randint(0,2)
+        return n
+    def enemyMove(self):
+        n=random.randint(0,1)
+        if n==0:
+            n=True
+        else:
+            n=False
+        return n
+
+    def __lt__(self,other):
+        return (self.speed < other.speed)
+
+    def __gt__(self,other):
+        return (self.speed > other.speed)
+
+
+class Arena:
+    def __init__(self,m1,m2,m3,m4,allyz=[0,0,0],enemiez=[0,0,0],morphs=[]):
+        self.m1= m1
+        self.m2= m2
+        self.m3=m3
+        self.m4=m4
+        self.allyz=allyz
+        self.enemiez=enemiez
+        self.morphs=morphs
+
+    def summonAlly(self,mm,p):
+        n=0
+        while mm.name not in self.allyz:
+            if p=="center":
+                n=1
+            elif p=="right":
+                n=2
+            else:
+                n=0
+            if self.allyz[n]==0:
+                self.allyz[n]=mm.name
+                self.morphs.append(mm)
+            else:
+                p=input("There is already a morph in that area. Pick another spot.\n")
+
+    def summonEnemy(self,mm):
+        n=random.randint(0,2)
+        while mm.name not in self.enemiez:
+            if self.enemiez[n]==0:
+                self.enemiez[n]=mm.name
+                self.morphs.append(mm)
+            else:
+                n=random.randint(0,2)
+
+    def moveMorph(self,mm,i):
+        if arena.allyz.count(0)==1:
+            target=self.allyz.index(0)
+            remnant=self.allyz.index(mm)
+            self.allyz[target]=mm
+            self.allyz[remnant]=0
+        else:
+            target = i
+            remnant = self.allyz.index(mm)
+            self.allyz[target] = mm
+            self.allyz[remnant] = 0
+
+
+    def moveEnemyMorph(self,mm,i):
+        if arena.enemiez.count(0)==1:
+            target=self.enemiez.index(0)
+            remnant=self.enemiez.index(mm)
+            self.enemiez[target]=mm
+            self.enemiez[remnant]=0
+        else:
+            target = i
+            remnant = self.enemiez.index(mm)
+            self.enemiez[target] = mm
+            self.enemiez[remnant] = 0
+
+    def battle(self,mm1,mm2):
+        if mm2 is not 0:
+            print("{mm1.name} attacked {mm2.name}".format(mm1=mm1,mm2=mm2))
+            mm2.takeDamage(mm1.damage)
+            print("{mm2.name} has {mm2.currentHP} left".format(mm2=mm2))
+        else:
+            print("{mm1.name} attacks but it misses!".format(mm1=mm1))
+
+def BattleSimulation(arena,bs=0):
+
+    if bs==0:
+        p=input("Where would you like to summon morph 1: center, right, or left\n")
+        arena.summonAlly(m1,p)
+        p=input("Where would you like to summon morph 2: center, right, or left\n")
+        arena.summonAlly(m2,p)
+        arena.summonEnemy(m3)
+        arena.summonEnemy(m4)
+        print(arena.allyz)
+        print(arena.enemiez)
+        bs=1
+        print("Lets Battle!")
+
+    while bs==1:
+        order=sorted(arena.morphs)
+        order=order[::-1]
+        targets=[]
+        moves=[]
+        positionList=[]
+        for i in order:
+            if i.name in arena.allyz:
+                print("{i.name} :\n".format(i=i))
+                targets.append(i.target(arena.enemiez))
+                if arena.allyz.count(0)==1:
+                    moves.append(i.move())
+                    positionList.append(0)
+                else:
+                    moves.append(i.move())
+                    if moves[-1]==True:
+                        positionList.append(i.position(arena.allyz.index(i.name)))
+                    else:
+                        positionList.append(0)
+
+            if i.name in arena.enemiez:
+                targets.append(i.enemyTarget())
+                if arena.enemiez.count(0)==1:
+                    moves.append(i.enemyMove())
+                    positionList.append(0)
+                else:
+                    moves.append(i.enemyMove())
+                    if moves[-1]==True:
+                        positionList.append(i.enemyPosition(arena.enemiez.index(i.name)))
+                    else:
+                        positionList.append(0)
+
+        for i in range(len(order)):
+            if order[i].name in arena.allyz:
+                morph = order[i].name
+
+                if moves[i] == True:
+                    arena.moveMorph(morph, positionList[i])
+                    p = arena.allyz.index(morph)
+                    if p == 0:
+                        print("{morph} moved to the left".format(morph=morph))
+                    elif p == 1:
+                        print("{morph} moved to the center".format(morph=morph))
+                    else:
+                        print("{morph} moved to the right".format(morph=morph))
+                        print(arena.allyz)
+
+            else:
+                morph = order[i].name
+
+                if moves[i] == True:
+                    arena.moveEnemyMorph(morph, positionList[i])
+                    p = arena.enemiez.index(morph)
+                    if p == 0:
+                        print("{morph} moved to left".format(morph=morph))
+                    elif p == 1:
+                        print("{morph} moved to center".format(morph=morph))
+                    else:
+                        print("{morph} moved to right".format(morph=morph))
+
+
+
+        for i in range(len(order)):
+            if order[i].currentHP != 0:
+                if order[i].name in arena.allyz:
+                    enemyName=arena.enemiez[targets[i]]
+                    enemy=0
+                    if enemyName != 0:
+                        l=0
+                        for j in order:
+                            if j.name==enemyName:
+                                break
+                            else:
+                                l= l+1
+                        enemy=order[l]
+
+                    arena.battle(order[i],enemy)
+
+                else:
+                    enemyName=arena.allyz[targets[i]]
+                    enemy=0
+
+                    if enemyName != 0:
+                        l=0
+                        for j in order:
+                            if j.name==enemyName:
+                                break
+                            else:
+                                l= l+1
+                        enemy=order[l]
+
+                    arena.battle(order[i], enemy)
+            else:
+                name=order[i].name
+                print("{name} is down!".format(name=name))
+
+
+        for i in order:
+            if i.currentHP == 0:
+                if i.name in arena.allyz:
+                    arena.allyz[arena.allyz.index(i.name)]=0
+                else:
+                    arena.enemiez[arena.enemiez.index(i.name)] = 0
+                arena.morphs.remove(i)
+
+        if arena.allyz == [0,0,0]:
+            print("You Lose!")
+            bs=2
+        elif arena.enemiez == [0,0,0]:
+            print("You Win!")
+            bs=2
+
+
+
+
+m1=Mythomorph("Brutapotamus",50,10,50,25)
+m2=Mythomorph("Arboar",50,4,40,30)
+m3=Mythomorph("Statalott",50,7,40,40)
+m4=Mythomorph("Gauchopod",50,10,25,20)
+arena=Arena(m1,m2,m3,m4)
+
+BattleSimulation(arena)
+
+
+
